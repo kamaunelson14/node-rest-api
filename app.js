@@ -15,6 +15,7 @@ app.use(express.urlencoded({extended: false}));
 
 //import routes
 app.use('/api/contacts/', require('./routes/contactRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 
 //custom error handler
 app.use(errorHandler);

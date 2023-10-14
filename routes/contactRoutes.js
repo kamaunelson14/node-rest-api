@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Contact = require('../models/contactModel');
+const {isLoggedIn} = require('../middleware/authMiddleware');
 const {
     getContacts,
     getContact,
@@ -9,14 +9,14 @@ const {
     deleteContact
 } = require('../controllers/contactController');
 
-router.get('/', getContacts);
+router.get('/',isLoggedIn, getContacts);
 
-router.get('/:id', getContact);
+router.get('/:id', isLoggedIn, getContact);
 
-router.post('/', postContact);
+router.post('/', isLoggedIn, postContact);
 
-router.put('/:id', updateContact);
+router.put('/:id', isLoggedIn, updateContact);
 
-router.delete('/:id', deleteContact);
+router.delete('/:id', isLoggedIn, deleteContact);
 
 module.exports = router;

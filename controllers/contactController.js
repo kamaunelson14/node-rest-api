@@ -56,7 +56,7 @@ const deleteContact = wrapAsync( async (req, res) => {
         res.status(400);
         throw new Error('Contact not found.');
     }
-    await contact.remove();
+    await Contact.findByIdAndDelete(req.params.id);
     res.status(200).json({message: 'Contact deleted'});
 });
 
