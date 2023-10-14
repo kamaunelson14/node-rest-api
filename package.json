@@ -1,0 +1,18 @@
+{
+  "name": "contacts-rest-api",
+  "version": "1.0.0",
+  "description": "A REST API simulating a contact book",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Nelson_K",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongoose": "^7.6.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.3.1"
+  }
+}
