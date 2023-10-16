@@ -52,7 +52,7 @@ Creates a new contact.
 
 #### Request
 - Body: JSON object with contact details (`name`, `phoneNumber`,`address`).
-- Constraints: The name should contain at least one alphabetical letter, be at least 2 characters long and no more than 20 characters long
+- Constraints: The name should contain at least one alphabetical letter, be at least 2 characters long and no more than 20 characters long. The phone number should be 10 digits long, as in `0712345678`
 
 #### Response
 - Status: 201 Created
@@ -83,6 +83,7 @@ Updates one contact by ID.
 
 #### Request
 - Body: JSON object with updated contact details.
+- Constraints: The name should contain at least one alphabetical letter, be at least 2 characters long and no more than 20 characters long. The phone number should be 10 digits long, as in `0712345678`
 
 #### Response
 - Status: 200 OK
