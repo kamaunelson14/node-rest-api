@@ -1,12 +1,38 @@
 const wrapAsync = require('../helpers/wrapAsync');
-
 const Contact = require('../models/contactModel');
+
+// @desc    Post a contact
+// @route   POST /api/contacts
+// @access  Private
+const postContact = wrapAsync( async (req, res) => {
+    const {name, phoneNumber, address} = req.body;
+    //prevent duplicate name
+    const nameExists = await Contact.findOne({name});
+    if(nameExists){
+        res.status(400);
+        throw new Error('Name is already in use.');
+    }
+    //prevent duplicate phone number
+    const contacts = await Contact.find({});
+    if(contacts.some(contact => contact.phoneNumber === phoneNumber)){
+        res.status(400);
+        throw new Error('Phone number is already saved');
+    }
+
+    //create contact
+    const contact = await Contact.create({
+        name,
+        phoneNumber,
+        address
+    });
+    res.status(201).json(contact);
+});
 
 // @desc    Get contacts
 // @route   GET /api/contacts
 // @access  Private
 const getContacts = wrapAsync( async (req, res) => {
-    const contacts = await Contact.find();
+    const contacts = await Contact.find().sort({_id: -1});
     res.status(200).json(contacts);
 });
 
@@ -22,18 +48,6 @@ const getContact = wrapAsync(async (req, res) => {
     res.status(200).json(contact);
 });
 
-// @desc    Post a contact
-// @route   POST /api/contacts
-// @access  Private
-const postContact = wrapAsync( async (req, res) => {
-    const contact = await Contact.create({
-        name: req.body.name,
-        phoneNumber: req.body.phoneNumber,
-        address: req.body.address
-    });
-    res.status(200).json(contact);
-});
-
 // @desc    Update a contact
 // @route   PUT /api/contacts/:id
 // @access  Private
@@ -42,6 +56,18 @@ const updateContact = wrapAsync( async (req, res) => {
     if(!contact){
         res.status(400);
         throw new Error('Contact not found.');
+    }
+    //prevent duplicate name
+    const nameExists = await Contact.findOne({name: req.body.name});
+    if(nameExists){
+        res.status(400);
+        throw new Error('Name is already in use.');
+    }
+    //prevent duplicate phone number
+    const contacts = await Contact.find({});
+    if(contacts.some(contact => contact.phoneNumber === req.body.phoneNumber)){
+        res.status(400);
+        throw new Error('Phone number is already saved');
     }
     const updatedContact = await Contact.findByIdAndUpdate(req.params.id, req.body, {new: true});
     res.status(200).json(updatedContact);

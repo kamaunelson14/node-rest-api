@@ -2,14 +2,15 @@
 process.env.NODE_ENV !== 'production' && require('dotenv').config();
 
 //Load dependencies
-const   express     = require('express'),
-        app         = express(),
-        {errorHandler} = require('./middleware/errorMiddleware'),
-        connectDB = require('./config/db');
+const express = require('express');
+const app = express();
+const { errorHandler } = require('./middleware/errorMiddleware');
+const connectDB = require('./config/db');
 
 //Connect to MongoDB
 connectDB();
 
+//parse JSON and URL-encoded paylods in incoming requests
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 

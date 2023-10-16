@@ -1,31 +1,27 @@
 const mongoose = require('mongoose');
 const {encrypt, decrypt} = require('../helpers/encryptionHandler');
 
-//name validator
-function validateName(name) {
-    //remove whitespace from both ends
-    const str = name.trim();
-    // Define the regular expression for name validation
-    const nameRegex = /^[a-zA-Z\s]+$/;
-     // Test the name against the regex and check length
-    return nameRegex.test(str) && str.length >= 2 && str.length <= 50;
+// custom name validator
+const nameValidator = (name) => {
+    const nameRegex = /[a-zA-Z]/;//at least one letter of the alphabet
+    return nameRegex.test(name) && name.length > 1 && name.length <= 20;
 }
 
 //phone number validator
-function validatePhoneNumber(phoneNumber){
-    // Define the regular expression for phone number validation
+const phoneNumberValidator = (phoneNumber) => {
     const phoneRegex = /^\d{10}$/; //matches a 10-digit phone number
-
     // Test the phone number against the regex
     return phoneRegex.test(phoneNumber);
 }
 
+//Define contact schema
 const contactSchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, 'Name is required'],
+        unique: true,
         validate: {
-            validator: validateName,
+            validator: nameValidator,
             message: props => `${props.value} is not a valid name.`
         }
     },
@@ -34,7 +30,7 @@ const contactSchema = new mongoose.Schema({
         required: [true, 'Phone number is required.'],
         unique: true,
         validate: {
-            validator: validatePhoneNumber,
+            validator: phoneNumberValidator,
             message: props => `${props.value} is not a valid phone number.`
         }
     },
@@ -44,29 +40,52 @@ const contactSchema = new mongoose.Schema({
     }
 }, {timestamps: true});
 
-//Hook to encrypt phone and address fields
+//encrypt phone and address fields when posting new contact
 contactSchema.pre('save', function (next){
     this.phoneNumber = encrypt(this.phoneNumber, process.env.CRYPTO_SECRET_KEY);
     this.address = encrypt(this.address, process.env.CRYPTO_SECRET_KEY);
     next();
 });
 
-//Hook schema to decrypt phone and address fields
+//encrypt phone and address fields when updating contact
+contactSchema.pre('findOneAndUpdate', function(next) {
+    const update = this.getUpdate();
+
+    //if phoneNumber is being updated, encrypt the value
+   if(update.phoneNumber){
+    update.phoneNumber = encrypt(update.phoneNumber, process.env.CRYPTO_SECRET_KEY)
+   }
+
+   //if address is being updated, encrypt the value
+   if(update.address){
+    update.address = encrypt(update.address, process.env.CRYPTO_SECRET_KEY);
+   }
+
+    next();
+});
+
+//decrypt phone and address fields when fetching one contact
 contactSchema.post('findOne', function (doc) {
+    //if doc is found, decrypt
     if(doc !== null){
         decrypt(doc.phoneNumber, process.env.CRYPTO_SECRET_KEY).then(res => doc.phoneNumber = res);
         decrypt(doc.address, process.env.CRYPTO_SECRET_KEY).then(res => doc.address = res);
     }
 });
 
-//Hook to return a custom message for unique Phone field
-contactSchema.post('save', (err, doc, next) => {
-    if (err.name === 'MongoError' && err.code === 11000) {
-      next(new Error('Phone number is already saved.'));
-    } else {
-      next(err);
+//decrypt phone and address field when fetching all contacts
+contactSchema.post('find', function(docs) {
+    //if docs is not empty, decrypt
+    if(docs.length > 0){
+        const promises = docs.map(doc => {
+            return Promise.all([
+                decrypt(doc.phoneNumber, process.env.CRYPTO_SECRET_KEY).then(res => doc.phoneNumber = res),
+                decrypt(doc.address, process.env.CRYPTO_SECRET_KEY).then(res => doc.address = res)
+            ]);
+        });
+
+        return Promise.all(promises);
     }
 });
-
 
 module.exports = mongoose.model('Contact', contactSchema);
